@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Slammerne</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <div id="ui">
+        <h1>Slammerne</h1>
+        <p>Score: <b id="score">0</b></p>
+        <p>Status: <b id="status">Loader...</b></p>
+        <button id="resetBtn">↺ Reset runde</button>
+        <button id="fullscreen-btn">⛶ Fuld skærm</button>
+    </div>
+
+    <div id="results">
+        <h2>Runde slut!</h2>
+        <div class="big" id="wonCount">0</div>
+        <p>caps vendt</p>
+        <div id="wonList"></div>
+        <button id="nextBtn">Næste runde</button>
+    </div>
+
+    <div id="power-container">
+        <div id="power-mask"></div>
+    </div>
+
+    <script src="three.min.js"></script>
+    <script type="module" src="src/main.js"></script>
+    <script>
+        const btn = document.getElementById('fullscreen-btn');
+        btn.addEventListener('pointerdown', async () => {
+            try {
+                if (document.fullscreenElement) {
+                    await document.exitFullscreen();
+                    btn.textContent = '⛶ Fuld skærm';
+                } else {
+                    const el = document.documentElement;
+                    await (el.requestFullscreen?.() ?? el.webkitRequestFullscreen?.());
+                    btn.textContent = '✕ Luk fuld skærm';
+                }
+            } catch (_) { /* iOS Safari understøtter ikke fullscreen — ignorer */ }
+        });
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) btn.textContent = '⛶ Fuld skærm';
+        });
+    </script>
+</body>
+</html>

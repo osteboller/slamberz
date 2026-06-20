@@ -1,0 +1,109 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: #1e2530;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    color: #fff;
+}
+
+#canvas-container {
+    width: 100vw;
+    height: 100vh;
+    touch-action: none; /* Deaktiverer pinch-zoom og double-tap zoom på touch-enheder */
+}
+
+
+/* ─── LEFT PANEL ─────────────────────────────────────────────────────────── */
+#ui {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.75);
+    padding: 14px 18px;
+    border-radius: 10px;
+    min-width: 180px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+#ui h1     { font-size: 18px; color: #ffcc00; margin-bottom: 8px; }
+#ui p      { font-size: 13px; margin: 3px 0; color: #aaa; }
+#ui b      { color: #fff; }
+#ui button {
+    margin-top: 10px;
+    width: 100%;
+    padding: 7px;
+    background: #ffcc00;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+/* Fuld skærm-knap: kun synlig på touch-enheder */
+#fullscreen-btn {
+    display: none;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ccc;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-weight: normal;
+}
+@media (pointer: coarse) {
+    #fullscreen-btn { display: block; }
+}
+
+/* ─── RESULTS ────────────────────────────────────────────────────────────── */
+#results {
+    display: none;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 16px 22px;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid #ffcc00;
+    min-width: 160px;
+    z-index: 100;
+}
+#results h2   { color: #ffcc00; font-size: 16px; margin-bottom: 6px; }
+#results .big { font-size: 32px; font-weight: bold; color: #ffcc00; line-height: 1; }
+#results p    { font-size: 12px; color: #aaa; margin: 4px 0 8px; }
+#wonList      { margin: 6px 0 10px; min-height: 22px; }
+#results button {
+    padding: 7px 20px;
+    background: #ffcc00;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+}
+#results button:hover { background: #ffe044; }
+
+/* ─── POWER BAR ──────────────────────────────────────────────────────────── */
+#power-container {
+    display: none;
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 300px;
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    /* Fast baggrund: rød nederst → gul midten → grøn øverst */
+    background: linear-gradient(to top, #cc2222 0%, #e8b800 50%, #22aa44 100%);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Mørk maske der glider ned fra toppen — JS styrer height */
+#power-mask {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(8, 8, 12, 0.92);
+}

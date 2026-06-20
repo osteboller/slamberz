@@ -1,0 +1,20 @@
+# Interne dev-noter — ikke relevante for spillere
+GDD_POGS.md
+claude-code-refactor-prompt.md
+
+# Claude Code session-data
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Dependencies (if npm is added later)
+node_modules/
+
+# Build output (if a bundler is added later)
+dist/
