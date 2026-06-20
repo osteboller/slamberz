@@ -20,14 +20,26 @@ export class CameraController {
     // Zoomer ind på stakken — kald ved buildStack()
     zoomIn()  { this._target = { ...CAM_CLOSE }; }
 
-    // Zoomer ud for at følge caps i luften — kald ved blast()
+    // Zoomer ud til basispositionen
     zoomOut() { this._target = { ...CAM_BASE }; }
+
+    // Dynamisk zoom: skalerer CAM_BASE op når caps spreder sig
+    // scale 1.0 = normal, 2.0 = dobbelt afstand
+    setZoomScale(scale) {
+        this._target = {
+            x: CAM_BASE.x,
+            y: CAM_BASE.y * scale,
+            z: CAM_BASE.z * scale,
+        };
+    }
 
     triggerShake(intensity, duration) {
         this._shakeIntensity = intensity;
         this._shakeDuration  = duration;
         this._shakeStartDur  = duration;
     }
+
+    isShaking() { return this._shakeIntensity > 0; }
 
     // Kaldes hvert frame i animate-loopet
     update(dt) {

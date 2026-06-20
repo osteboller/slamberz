@@ -40,6 +40,10 @@ export class UIManager {
         document.getElementById('results').style.display = 'none';
     }
 
+    resetScore() {
+        document.getElementById('score').textContent = 0;
+    }
+
     // ─── PANEL ───────────────────────────────────────────────────────────────
     _sliderRow(label, sliderId, valueId, min, max, step, val) {
         return `
@@ -56,7 +60,7 @@ export class UIManager {
     _buildTunePanel() {
         const panel = document.createElement('div');
         panel.style.cssText = `
-            position:absolute;bottom:20px;right:20px;
+            position:absolute;bottom:20px;left:65px;
             background:rgba(0,0,0,0.82);color:#fff;
             border-radius:10px;font:13px/1.9 Arial,sans-serif;width:210px;
             border:1px solid rgba(255,255,255,0.12);user-select:none;overflow:hidden;`;

@@ -32,6 +32,7 @@ let phase       = 'idle';
 let blastTime   = 0;
 let settleStart = 0;
 let totalScore  = 0;
+let settleMaxR  = 0; // high water mark — zoom går kun ud, aldrig tilbage
 
 // Fanget ved klik — bruges konsistent i spawn og blast
 let shotSpeed    = 0;
@@ -66,12 +67,15 @@ collisions.onMiss = () => {
     phase = 'done';
     render.setReticleVisible(false);
     ui.showResults(0, totalScore, []);
-    ui.setStatus('Miss!');
+    ui.setStatus('Miss! · Klik for næste runde');
 };
 
-// Mus bevæger sig → flyt retikel til præcis 3D-hitpunkt (cap-overflade eller gulv)
-// Retikel dukker op ved første musbevægelse i idle — ikke ved (0,0) ved rundestart
+// Sættes til true efter done-faseklik for at undertrykke det syntetiske
+// mousemove mobilbrowsere fyrer umiddelbart efter pointerdown
+let suppressNextAim = false;
+
 input.onAim = (x, y, z) => {
+    if (suppressNextAim) { suppressNextAim = false; return; }
     if (phase === 'idle') {
         render.setReticlePosition(x, y, z);
         render.setReticleVisible(true);
@@ -79,7 +83,9 @@ input.onAim = (x, y, z) => {
 };
 
 // Klik → frys power, vis retikel på mål, gå til 'aiming'-fase
+// Klik under 'done' starter næste runde direkte (ingen knap nødvendig)
 input.onShot = (x, y, z) => {
+    if (phase === 'done') { suppressNextAim = true; buildStack(); return; }
     if (phase !== 'idle') return;
     powerBar.freeze();
     shotSpeed = powerBar.getMappedSpeed();
@@ -97,8 +103,12 @@ input.onShot = (x, y, z) => {
     ui.setStatus('Sigter...');
 };
 
-document.getElementById('resetBtn').addEventListener('click', e => { e.stopPropagation(); buildStack(); });
-document.getElementById('nextBtn').addEventListener('click',  e => { e.stopPropagation(); buildStack(); });
+document.getElementById('resetBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    totalScore = 0;
+    ui.resetScore();
+    buildStack();
+});
 
 // ─── FACTORY ─────────────────────────────────────────────────────────────────
 function spawnCap(def, y) {
@@ -211,6 +221,7 @@ function buildStack() {
     blastTime   = 0;
     settleStart = 0;
     aimingStart = 0;
+    settleMaxR  = 0;
     collisions.reset();
     powerBar.reset();
     cam.zoomIn();
@@ -247,7 +258,7 @@ function finishRound() {
 
     totalScore += won;
     ui.showResults(won, totalScore, wonCaps);
-    ui.setStatus('Runde slut!');
+    ui.setStatus('Runde slut! · Klik for næste runde');
 }
 
 function allStill() {
@@ -282,12 +293,27 @@ function animate() {
         collisions.reset();
         phase = 'done';
         ui.showResults(0, totalScore, []);
-        ui.setStatus('Miss!');
+        ui.setStatus('Miss! · Klik for næste runde');
     }
 
     physics.step(dt);
     collisions.checkPending();
     render.sync(caps, slammer);
+
+    // Dynamisk zoom: kun i settling-fasen, kun når shaken er færdig
+    // (shake + zoom på samme tid kæmper mod hinanden visuelt)
+    if (phase === 'settling' && !cam.isShaking()) {
+        caps.forEach(({ body }) => {
+            if (body.velocity.length() < 12) {
+                const p = body.position;
+                settleMaxR = Math.max(settleMaxR, Math.sqrt(p.x * p.x + p.z * p.z));
+            }
+        });
+        if (settleMaxR > 0) {
+            const scale = Math.max(1, Math.min(settleMaxR / 22, 1.5));
+            cam.setZoomScale(scale);
+        }
+    }
 
     if (phase === 'blasted' && slammer && now - blastTime > 400) {
         slammer.body.linearDamping  = 0.95;
