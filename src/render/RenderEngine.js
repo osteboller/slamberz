@@ -59,7 +59,7 @@ export class RenderEngine {
             new THREE.MeshStandardMaterial({ color: 0x6b4218, roughness: 0.95 })
         );
         border.rotation.x = -Math.PI / 2;
-        border.position.y = 0.003;
+        border.position.y = 0.02;
         border.receiveShadow = true;
         this.scene.add(border);
 
@@ -70,10 +70,13 @@ export class RenderEngine {
                 map:       this._createCorkTexture(),
                 roughness: 0.88,
                 metalness: 0.0,
+                polygonOffset: true,
+                polygonOffsetFactor: -1,
+                polygonOffsetUnits: -1,
             })
         );
         mat.rotation.x = -Math.PI / 2;
-        mat.position.y = 0.005;
+        mat.position.y = 0.04;
         mat.receiveShadow = true;
         this.scene.add(mat);
     }
