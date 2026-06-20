@@ -88,6 +88,7 @@ export class UIManager {
             this._panelOpen = !this._panelOpen;
             document.getElementById('tune-body').style.display = this._panelOpen ? '' : 'none';
             document.getElementById('tune-arrow').textContent  = this._panelOpen ? '▼' : '►';
+            panel.style.width = this._panelOpen ? '210px' : 'auto';
         });
 
         document.getElementById('sl-mss').addEventListener('input', e => {
