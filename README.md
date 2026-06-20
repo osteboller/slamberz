@@ -1,35 +1,41 @@
-# Slammerne Simulator
+# Slamberz
 
-En browserbaseret simulator af det klassiske Slammerne-spil bygget med Three.js (r148) og Cannon-es fysik.
+A physics-driven browser game inspired by the classic caps toy from the 90s.
 
-## Kør lokalt
+**Play it here:** https://[your-username].github.io/slamberz/
 
-1. Åbn mappen i VS Code
-2. Start **Live Server** (højreklik på `index.html` → *Open with Live Server*)
-3. Spillet kører på `http://127.0.0.1:5500`
+---
 
-Ingen build-step, ingen npm install — native ES-moduler direkte i browseren.
+## How to play
 
-## Spil
+- The **power bar** on the left oscillates and accelerates — click when it hits the green zone for maximum force
+- The **reticle** shows exactly where on the stack you're aiming
+- Caps that land **face-down** count as won
+- Adjust slammer settings in the **⚙ Slammer** panel bottom right
 
-- Klik på banen for at kaste slammeren
-- Caps der lander med bagsiden opad tæller som vundne
-- Justér hastighed og vægt via panelet nede til højre (virker fra næste kast)
+## Run locally
 
-## Status
+1. Open the folder in VS Code
+2. Start **Live Server** (right-click `index.html` → *Open with Live Server*)
 
-Modulær refaktorering gennemført. Kollisionsdetektion bruger Cannon-es' `beginContact`-event i stedet for Y-positions-polling.
+No build step, no npm install — native ES modules served directly in the browser.
 
-## Struktur
+## Tech stack
+
+- [Three.js r148](https://threejs.org/) — 3D rendering
+- [Cannon-es](https://github.com/pmndrs/cannon-es) — physics simulation
+- Native browser ES modules
+
+## Structure
 
 ```
 src/
-  config/       — konstanter og cap-definitioner
-  physics/      — PhysicsEngine, CollisionManager, ShapeFactory
-  render/       — RenderEngine, CameraShake
-  entities/     — Cap, Slammer (data-wrappere)
-  input/        — InputManager
-  ui/           — UIManager
+  config/    — constants and cap definitions
+  physics/   — PhysicsEngine, CollisionManager, ShapeFactory
+  render/    — RenderEngine, CameraController
+  entities/  — Cap, Slammer
+  input/     — InputManager
+  ui/        — UIManager, PowerBar
 lib/
-  cannon.js     — lokal Cannon-es build
+  cannon.js  — Cannon-es (local build)
 ```
