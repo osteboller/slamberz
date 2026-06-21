@@ -27,23 +27,19 @@ body {
 #ui p  { font-size: 13px; color: #aaa; }
 #ui b  { color: #fff; }
 
-/* ─── STATUS BAR (centreret bund) ────────────────────────────────────────── */
-#status-bar {
-    position: absolute;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.85);
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
-    pointer-events: none;
+#throw-pips { display: flex; gap: 5px; margin-top: 8px; }
+.throw-pip {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    transition: background 0.2s, border-color 0.2s;
 }
+.throw-pip.active { background: #ffcc00; border-color: #ffcc00; }
 
-/* ─── HJØRNEKNAPPER (reset + fullscreen) — nu højre ──────────────────────── */
+/* ─── TOP-RIGHT: reset + slammer + fullscreen ────────────────────────────── */
 #corner-btns {
     position: absolute;
-    bottom: 20px;
+    top: 20px;
     right: 20px;
     display: flex;
     gap: 8px;
@@ -63,7 +59,6 @@ body {
     justify-content: center;
     transition: background 0.15s;
 }
-
 #corner-btns button:hover { background: rgba(255, 255, 255, 0.15); }
 
 #fullscreen-btn { display: none; }
@@ -71,11 +66,127 @@ body {
     #fullscreen-btn { display: flex; }
 }
 
-/* ─── RESULTS (kompakt, ingen knap) ──────────────────────────────────────── */
+/* ─── PILE BUTTONS (bund-venstre og bund-højre) ──────────────────────────── */
+.pile-btn {
+    position: absolute;
+    bottom: 20px;
+    width: 54px;
+    height: 44px;
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    transition: background 0.15s;
+}
+.pile-btn:hover { background: rgba(255, 255, 255, 0.15); }
+#pile-won-btn { left: 65px; }
+#pile-rem-btn { right: 20px; }
+
+.pile-btn span:first-child {
+    font-size: 13px;
+    font-weight: bold;
+    line-height: 1;
+}
+.pile-btn-label {
+    font-size: 9px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1;
+}
+
+/* ─── CAP OVERLAY ────────────────────────────────────────────────────────── */
+#cap-overlay {
+    display: none;
+    position: absolute;
+    background: rgba(0, 0, 0, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 10px 12px;
+    z-index: 200;
+    max-width: 240px;
+}
+#cap-overlay-title {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+#cap-overlay-dots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.cap-thumb {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+    border: 2px solid rgba(255,255,255,0.15);
+    transition: transform 0.12s, border-color 0.12s;
+    display: block;
+}
+.cap-thumb:hover { transform: scale(1.18); border-color: rgba(255,255,255,0.6); }
+.cap-thumb.dimmed { opacity: 0.55; }
+
+/* ─── CAP DETAIL ─────────────────────────────────────────────────────────── */
+#cap-detail {
+    display: none;
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.95);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    padding: 20px;
+    z-index: 300;
+    text-align: center;
+    min-width: 160px;
+}
+#cap-detail img {
+    width: 128px; height: 128px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(255,255,255,0.2);
+    display: block;
+    margin: 0 auto 10px;
+}
+#cap-detail-name {
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff;
+}
+#cap-detail-sub {
+    font-size: 11px;
+    color: #666;
+    margin-top: 3px;
+}
+
+/* ─── STATUS BAR ─────────────────────────────────────────────────────────── */
+#status-bar {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.85);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+    pointer-events: none;
+}
+
+/* ─── RESULTS ────────────────────────────────────────────────────────────── */
 #results {
     display: none;
     position: absolute;
-    top: 20px;
+    top: 70px;
     right: 20px;
     background: rgba(0, 0, 0, 0.9);
     padding: 12px 18px;
@@ -103,7 +214,6 @@ body {
     border-radius: 10px;
     overflow: hidden;
 }
-
 #power-mask {
     position: absolute;
     top: 0;

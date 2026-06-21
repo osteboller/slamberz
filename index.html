@@ -12,11 +12,39 @@
     <div id="ui">
         <h1>Slamberz</h1>
         <p>Score: <b id="score">0</b></p>
+        <div id="throw-pips"></div>
     </div>
 
+    <!-- Top-right: reset, slammer, fullscreen -->
     <div id="corner-btns">
         <button id="resetBtn" title="Reset runde">↺</button>
+        <button id="slammer-btn" title="Slammer indstillinger">⚙</button>
         <button id="fullscreen-btn" title="Fuld skærm">⛶</button>
+    </div>
+
+    <!-- Bottom-left: vundne caps -->
+    <button id="pile-won-btn" class="pile-btn" title="Vundne caps">
+        <span id="pile-won-count">0/0</span>
+        <span class="pile-btn-label">Vundet</span>
+    </button>
+
+    <!-- Bottom-right: caps tilbage i stakken -->
+    <button id="pile-rem-btn" class="pile-btn" title="Caps i stakken">
+        <span id="pile-rem-count">0/0</span>
+        <span class="pile-btn-label">Tilbage</span>
+    </button>
+
+    <!-- Shared overlay for both piles -->
+    <div id="cap-overlay">
+        <p id="cap-overlay-title"></p>
+        <div id="cap-overlay-dots"></div>
+    </div>
+
+    <!-- Cap detail popup -->
+    <div id="cap-detail">
+        <img id="cap-detail-img" src="" alt="">
+        <div id="cap-detail-name"></div>
+        <div id="cap-detail-sub"></div>
     </div>
 
     <div id="results">
@@ -42,11 +70,8 @@
         } else {
             btn.addEventListener('pointerdown', async () => {
                 try {
-                    if (document.fullscreenElement) {
-                        await document.exitFullscreen();
-                    } else {
-                        await document.documentElement.requestFullscreen();
-                    }
+                    if (document.fullscreenElement) await document.exitFullscreen();
+                    else await document.documentElement.requestFullscreen();
                 } catch (_) {}
             });
         }
