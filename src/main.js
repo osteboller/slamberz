@@ -29,6 +29,7 @@ let caps        = [];
 let slammer     = null;
 // idle → aiming → falling → blasted → settling → done
 let phase       = 'idle';
+let roundId     = 0;       
 let blastTime   = 0;
 let settleStart = 0;
 let totalScore  = 0;
@@ -265,6 +266,7 @@ function blast() {
 
 // ─── ROUND MANAGEMENT ────────────────────────────────────────────────────────
 function buildStack() {
+    roundId++;                 // ← tilføj som første linje — ugyldiggør alle ventende callbacks
     caps.forEach(({ mesh, body }) => { render.removeMesh(mesh); physics.world.removeBody(body); });
     caps = [];
     if (slammer) {
@@ -329,7 +331,6 @@ function endThrow(miss = false) {
     ui.updateThrowPips(throwsLeft, THROWS_PER_ROUND);
 
     if (throwsLeft > 0 && faceDown.length > 0) {
-        // Flere kast tilbage — kort pause, derefter restack
         phase = 'restacking';
         const throwsDone = THROWS_PER_ROUND - throwsLeft;
         const msg = miss
@@ -337,7 +338,10 @@ function endThrow(miss = false) {
             : `${wonNow.length} caps vendt · ${faceDown.length} tilbage · kast ${throwsDone}/${THROWS_PER_ROUND}`;
         ui.setStatus(msg);
 
+        const capturedRound = roundId; // ← fang generation inden timeout
         setTimeout(() => {
+            if (roundId !== capturedRound) return; // ← reset blev trykket, bail ud
+
             // Fjern vundne caps fra scene + physics
             wonNow.forEach(({ mesh, body }) => {
                 render.removeMesh(mesh);
@@ -383,7 +387,6 @@ function endThrow(miss = false) {
         }, 1500);
 
     } else {
-        // Ingen kast tilbage eller ingen caps — runde slut
         phase = 'done';
         ui.showResults(wonCapsAll.length, totalScore, wonCapsAll);
         ui.setStatus('Runde slut! · Klik for næste runde');
