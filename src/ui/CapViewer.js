@@ -52,7 +52,7 @@ export class CapViewer {
             if (!this._dragging || !this._mesh) return;
             const dx = e.clientX - this._lastX;
             const dy = e.clientY - this._lastY;
-            const qY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -dx * 0.012);
+            const qY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0),  dx * 0.012);
             const qX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0),  dy * 0.012);
             this._mesh.quaternion.premultiply(qY);
             this._mesh.quaternion.premultiply(qX);
