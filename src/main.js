@@ -52,6 +52,11 @@ let settleMaxR  = 0;
 let throwsLeft  = 0;
 let wonCapsAll  = []; // akkumuleret på tværs af alle kast i en runde
 
+// Ventende restack-data — udfyldes af endThrow(), bruges af applyRestack() ved klik
+let _pendingWon        = [];
+let _pendingFaceDown   = [];
+let _pendingThrowsDone = 0;
+
 // Fanget ved klik — bruges konsistent i spawn og blast
 let shotSpeed    = 0;
 let shotMass     = 0;
@@ -101,7 +106,7 @@ input.onAim = (x, y, z) => {
 // Klik under 'done' starter næste runde direkte (ingen knap nødvendig)
 input.onShot = (x, y, z) => {
     if (ui.isOverlayOpen()) { suppressNextAim = true; return; }
-    if (phase === 'ready') { phase = 'idle'; suppressNextAim = true; return; } // ← ny linje
+    if (phase === 'ready') { suppressNextAim = true; applyRestack(); return; }
     if (phase === 'restacking') return;
     if (phase === 'done') { suppressNextAim = true; buildStack(); return; }
     if (phase !== 'idle') return;
@@ -114,7 +119,7 @@ input.onShot = (x, y, z) => {
 
     render.setReticlePosition(pendingX, pendingY, pendingZ);
     render.setReticleVisible(true);
-    cam.zoomOut();
+    cam.zoomOut(); // Begynd zoom under 1-sekunders pausen så kameraet er klar til action
 
     phase       = 'aiming';
     aimingStart = performance.now();
@@ -310,6 +315,9 @@ function buildStack() {
     settleMaxR   = 0;
     throwsLeft   = THROWS_PER_ROUND;
     wonCapsAll   = [];
+    _pendingWon        = [];
+    _pendingFaceDown   = [];
+    _pendingThrowsDone = 0;
     collisions.reset();
     powerBar.reset();
     cam.zoomIn();
@@ -322,8 +330,46 @@ function buildStack() {
     delay(() => { if (phase === 'idle') ui.setStatus('Klik på banen for at kaste!'); }, 300);
 }
 
+
+function applyRestack() {
+    _pendingWon.forEach(({ mesh, body }) => {
+        render.removeMesh(mesh);
+        physics.world.removeBody(body);
+    });
+    if (slammer) {
+        render.removeMesh(slammer.mesh);
+        physics.world.removeBody(slammer.body);
+        slammer = null;
+    }
+    for (let i = _pendingFaceDown.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [_pendingFaceDown[i], _pendingFaceDown[j]] = [_pendingFaceDown[j], _pendingFaceDown[i]];
+    }
+    _pendingFaceDown.forEach(({ body }, i) => {
+        physics.world.removeBody(body);
+        body.type = BODY_TYPES.STATIC;
+        body.velocity.set(0, 0, 0);
+        body.angularVelocity.set(0, 0, 0);
+        body.position.set(0, POG_H * 0.5 + i * (POG_H + 0.01), 0);
+        body.quaternion.setFromEuler(Math.PI + (Math.random() - 0.5) * 0.04, Math.random() * Math.PI * 2, 0);
+        physics.world.addBody(body);
+    });
+    caps = _pendingFaceDown;
+    ui.updatePileButtons(caps.map(c => c.def), wonCapsAll);
+    collisions.reset();
+    powerBar.reset();
+    cam.zoomIn();
+    settleMaxR   = 0;
+    blastTime    = 0;
+    settleStart  = 0;
+    aimingStart  = 0;
+    fallingStart = 0;
+    ui.setStatus(`Kast ${_pendingThrowsDone + 1}/${THROWS_PER_ROUND} · Klik for at kaste!`);
+    phase = 'idle';
+}
+
 function endThrow(miss = false) {
-    if (phase === 'done' || phase === 'restacking') return;
+    if (phase === 'done' || phase === 'restacking' || phase === 'ready') return;
     render.setReticleVisible(false);
 
     // Frys alt
@@ -354,58 +400,16 @@ function endThrow(miss = false) {
     ui.updateThrowPips(throwsLeft, THROWS_PER_ROUND);
 
     if (throwsLeft > 0 && faceDown.length > 0) {
-        // Flere kast tilbage — kort pause, derefter restack
-        phase = 'restacking';
-        const throwsDone = THROWS_PER_ROUND - throwsLeft;
+        // Gem data til applyRestack() — ingen timer, venter på klik
+        _pendingWon        = wonNow;
+        _pendingFaceDown   = faceDown;
+        _pendingThrowsDone = THROWS_PER_ROUND - throwsLeft;
+
         const msg = miss
-            ? `Miss! · ${faceDown.length} caps tilbage · kast ${throwsDone}/${THROWS_PER_ROUND}`
-            : `${wonNow.length} caps vendt · ${faceDown.length} tilbage · kast ${throwsDone}/${THROWS_PER_ROUND}`;
+            ? `Miss! · ${faceDown.length} caps tilbage · Klik for at fortsætte`
+            : `${wonNow.length} caps vendt · ${faceDown.length} tilbage · Klik for at fortsætte`;
         ui.setStatus(msg);
-
-        delay(() => {
-            // Fjern vundne caps fra scene + physics
-            wonNow.forEach(({ mesh, body }) => {
-                render.removeMesh(mesh);
-                physics.world.removeBody(body);
-            });
-
-            // Fjern slammer
-            if (slammer) {
-                render.removeMesh(slammer.mesh);
-                physics.world.removeBody(slammer.body);
-                slammer = null;
-            }
-
-            // Bland og restack de tilbageværende caps
-            for (let i = faceDown.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [faceDown[i], faceDown[j]] = [faceDown[j], faceDown[i]];
-            }
-            faceDown.forEach(({ body }, i) => {
-                physics.world.removeBody(body);
-                body.type = BODY_TYPES.STATIC;
-                body.velocity.set(0, 0, 0);
-                body.angularVelocity.set(0, 0, 0);
-                body.position.set(0, POG_H * 0.5 + i * (POG_H + 0.01), 0);
-                body.quaternion.setFromEuler(Math.PI + (Math.random() - 0.5) * 0.04, Math.random() * Math.PI * 2, 0);
-                physics.world.addBody(body);
-            });
-            caps = faceDown;
-            ui.updatePileButtons(caps.map(c => c.def), wonCapsAll);
-
-            // Reset til næste kast
-            collisions.reset();
-            powerBar.reset();
-            cam.zoomIn();
-            settleMaxR   = 0;
-            blastTime    = 0;
-            settleStart  = 0;
-            aimingStart  = 0;
-            fallingStart = 0;
-
-            ui.setStatus(`Kast ${throwsDone + 1}/${THROWS_PER_ROUND} · Klik for at kaste!`);
-            phase = 'ready'; // ← var: delay(() => { phase = 'idle'; }, 150)
-        }, 1500);
+        phase = 'ready'; // venter på klik → applyRestack()
 
     } else {
         // Ingen kast tilbage eller ingen caps — runde slut
@@ -448,6 +452,23 @@ function animate() {
     }
 
     physics.step(dt, caps.length);
+
+    // Safety net mod tunneling: positionelt cylinder-overlap-tjek hver frame.
+    // Cannon-es CCD kræver at broadphase allerede har fundet parret — ved tynde
+    // caps og høj hastighed kan broadphase misse. Denne check er uafhængig.
+    if (phase === 'falling' && slammer) {
+        const sp = slammer.body.position;
+        for (const { body } of caps) {
+            const cp  = body.position;
+            const dy  = sp.y - cp.y;
+            const dxz = Math.sqrt((sp.x - cp.x) ** 2 + (sp.z - cp.z) ** 2);
+            if (dxz < POG_R * 2 && Math.abs(dy) < (SLAM_H + POG_H) / 2) {
+                collisions.forceBlast();
+                break;
+            }
+        }
+    }
+
     collisions.checkPending();
     render.sync(caps, slammer);
 
