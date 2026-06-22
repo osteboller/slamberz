@@ -17,7 +17,7 @@ body {
 #ui {
     position: absolute;
     top: 20px;
-    left: 65px;
+    left: 10px;
     background: rgba(0, 0, 0, 0.75);
     padding: 10px 16px;
     border-radius: 10px;
@@ -85,7 +85,7 @@ body {
     transition: background 0.15s;
 }
 .pile-btn:hover { background: rgba(255, 255, 255, 0.15); }
-#pile-won-btn { left: 65px; }
+#pile-won-btn { left: 10px; }
 #pile-rem-btn { right: 20px; }
 
 .pile-btn span:first-child {
@@ -150,14 +150,16 @@ body {
     text-align: center;
     min-width: 160px;
 }
-#cap-detail img {
-    width: 128px; height: 128px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid rgba(255,255,255,0.2);
-    display: block;
-    margin: 0 auto 10px;
+#cap-viewer-container {
+    width: 220px;
+    height: 220px;
+    margin: 0 auto 12px;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: grab;
+    background: rgba(255,255,255,0.03);
 }
+#cap-viewer-container:active { cursor: grabbing; }
 #cap-detail-name {
     font-size: 13px;
     font-weight: bold;
@@ -170,6 +172,26 @@ body {
 }
 
 /* ─── STATUS BAR ─────────────────────────────────────────────────────────── */
+#action-prompt {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 14px rgba(255, 204, 0, 0.55), 0 1px 4px rgba(0, 0, 0, 0.9);
+    pointer-events: none;
+    display: none;
+    animation: prompt-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes prompt-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.55; }
+}
+
 #status-bar {
     position: absolute;
     bottom: 32px;
@@ -199,6 +221,41 @@ body {
 #results .big { font-size: 36px; font-weight: bold; color: #ffcc00; line-height: 1; }
 #results p    { font-size: 12px; color: #aaa; margin: 3px 0 6px; }
 #wonList      { min-height: 20px; }
+
+/* ─── CAP COLLECT ANIMATION ─────────────────────────────────────────────── */
+@keyframes collect-float {
+    0%   { opacity: 0;   transform: translateY(0)    scale(0.4); }
+    20%  { opacity: 1;   transform: translateY(-10px) scale(1);   }
+    100% { opacity: 0;   transform: translateY(-48px) scale(0.7); }
+}
+
+.collect-icon {
+    position: fixed;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 204, 0, 0.85);
+    pointer-events: none;
+    z-index: 500;
+    animation: collect-float 0.75s ease-out forwards;
+}
+
+@keyframes btn-collect-glow {
+    0%   { box-shadow: 0 0 0   0   rgba(255,204,0,0);   border-color: rgba(255,255,255,0.2); }
+    30%  { box-shadow: 0 0 14px 5px rgba(255,204,0,0.7); border-color: #ffcc00; }
+    100% { box-shadow: 0 0 0   0   rgba(255,204,0,0);   border-color: rgba(255,255,255,0.2); }
+}
+
+#pile-won-btn.collect-flash {
+    animation: btn-collect-glow 0.55s ease-out forwards;
+}
+
+/* ─── Mobil landscape (lav skærm): power-bar rammer top/bund — giv clearance ── */
+@media (orientation: landscape) and (max-height: 500px) {
+    #ui           { left: 65px; }
+    #pile-won-btn { left: 65px; }
+}
 
 /* ─── POWER BAR ──────────────────────────────────────────────────────────── */
 #power-container {

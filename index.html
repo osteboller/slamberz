@@ -23,15 +23,15 @@
     </div>
 
     <!-- Bottom-left: vundne caps -->
-    <button id="pile-won-btn" class="pile-btn" title="Vundne caps">
+    <button id="pile-won-btn" class="pile-btn" title="Flipped caps">
         <span id="pile-won-count">0/0</span>
-        <span class="pile-btn-label">Vundet</span>
+        <span class="pile-btn-label">Flipped</span>
     </button>
 
     <!-- Bottom-right: caps tilbage i stakken -->
     <button id="pile-rem-btn" class="pile-btn" title="Caps i stakken">
         <span id="pile-rem-count">0/0</span>
-        <span class="pile-btn-label">Tilbage</span>
+        <span class="pile-btn-label">Stack</span>
     </button>
 
     <!-- Shared overlay for both piles -->
@@ -42,7 +42,7 @@
 
     <!-- Cap detail popup -->
     <div id="cap-detail">
-        <img id="cap-detail-img" src="" alt="">
+        <div id="cap-viewer-container"></div>
         <div id="cap-detail-name"></div>
         <div id="cap-detail-sub"></div>
     </div>
@@ -53,6 +53,7 @@
         <div id="wonList"></div>
     </div>
 
+    <p id="action-prompt"></p>
     <p id="status-bar"><span id="status">Loader...</span></p>
 
     <div id="power-container">
