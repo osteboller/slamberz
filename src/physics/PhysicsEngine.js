@@ -23,7 +23,8 @@ export class PhysicsEngine {
         this.world.addBody(this.groundBody);
     }
 
-    step(dt) {
-        this.world.step(1 / 120, dt, 10);
+    step(dt, activeCaps = 0) {
+        const substeps = activeCaps <= 2 ? 20 : 10;
+        this.world.step(1 / 120, dt, substeps);
     }
 }
