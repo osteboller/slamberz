@@ -1,3 +1,4 @@
+export const VERSION = '0.4.1';
 export const POG_R       = 1.2;
 export const POG_H       = 0.13;
 export const SLAM_H      = 0.28;
