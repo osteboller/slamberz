@@ -4,6 +4,7 @@ import { CollisionManager }   from './physics/CollisionManager.js';
 import { createCapShape, createSlammerShape } from './physics/shapes/ShapeFactory.js';
 import { RenderEngine }       from './render/RenderEngine.js';
 import { CameraController }   from './render/CameraController.js';
+import { loadTextures }       from './render/TextureLoader.js';
 import { InputManager }       from './input/InputManager.js';
 import { UIManager }          from './ui/UIManager.js';
 import { PowerBar }           from './ui/PowerBar.js';
@@ -57,14 +58,16 @@ let _pendingWon        = [];
 let _pendingFaceDown   = [];
 let _pendingThrowsDone = 0;
 
+
 // Fanget ved klik — bruges konsistent i spawn og blast
 let shotSpeed    = 0;
 let shotMass     = 0;
 let pendingX     = 0;
 let pendingY     = 0;
 let pendingZ     = 0;
-let aimingStart  = 0;
-let fallingStart = 0; // timeout-sikkerhed mod miss
+let aimingStart   = 0;
+let fallingStart  = 0; // timeout-sikkerhed mod miss
+let prevSlammerY  = null; // slammernes y-position fra forrige frame — til pass-through detektion
 
 // ─── WIRING ──────────────────────────────────────────────────────────────────
 
@@ -123,6 +126,7 @@ input.onShot = (x, y, z) => {
 
     phase       = 'aiming';
     aimingStart = performance.now();
+    ui.setActionPrompt(null);
     ui.setStatus('Sigter...');
 };
 
@@ -133,49 +137,6 @@ document.getElementById('resetBtn').addEventListener('click', e => {
     ui.resetScore();
     buildStack();
 });
-
-// ─── TEXTURES ────────────────────────────────────────────────────────────────
-const texCache = {};
-
-function createKnurlTexture(rimColor) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512; canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    const r = (rimColor >> 16) & 0xff, g = (rimColor >> 8) & 0xff, b = rimColor & 0xff;
-    ctx.fillStyle = `rgb(${r},${g},${b})`;
-    ctx.fillRect(0, 0, 512, 64);
-    const ridgeCount = 48, rw = 512 / ridgeCount;
-    for (let i = 0; i < ridgeCount; i++) {
-        const x = i * rw;
-        const grad = ctx.createLinearGradient(x, 0, x + rw, 0);
-        grad.addColorStop(0,    'rgba(255,255,255,0.28)');
-        grad.addColorStop(0.25, 'rgba(255,255,255,0.06)');
-        grad.addColorStop(0.65, 'rgba(0,0,0,0.12)');
-        grad.addColorStop(1,    'rgba(0,0,0,0.32)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(x, 0, rw, 64);
-    }
-    return new THREE.CanvasTexture(canvas);
-}
-
-async function loadTextures() {
-    const loader = new THREE.TextureLoader();
-    const load = url => new Promise(res => {
-        loader.load(url, tex => {
-            tex.colorSpace = THREE.SRGBColorSpace;
-            res(tex);
-        }, undefined, () => { console.warn('Tekstur mangler:', url); res(null); });
-    });
-    for (const def of CAP_DEFS) {
-        if (def.texFront) texCache[def.texFront] = await load(def.texFront);
-        if (def.texBack)  texCache[def.texBack]  = await load(def.texBack);
-    }
-    for (const def of SLAMMER_DEFS) {
-        if (def.texFront) texCache[def.texFront] = await load(def.texFront);
-        if (def.texBack)  texCache[def.texBack]  = await load(def.texBack);
-        def._knurl = createKnurlTexture(def.rimColor);
-    }
-}
 
 // ─── FACTORY ─────────────────────────────────────────────────────────────────
 function spawnCap(def, y) {
@@ -302,9 +263,10 @@ function buildStack() {
         slammer = null;
     }
 
-    const count = ui.getStackCount();
+    const count      = ui.getStackCount();
+    const activeCaps = [...ui.getActiveCaps()].sort(() => Math.random() - 0.5);
     for (let i = 0; i < count; i++) {
-        spawnCap(CAP_DEFS[i % CAP_DEFS.length], POG_H * 0.5 + i * (POG_H + 0.01));
+        spawnCap(activeCaps[i % activeCaps.length], POG_H * 0.5 + i * (POG_H + 0.01));
     }
 
     phase        = 'idle';
@@ -313,8 +275,9 @@ function buildStack() {
     aimingStart  = 0;
     fallingStart = 0;
     settleMaxR   = 0;
+    prevSlammerY = null;
     throwsLeft   = THROWS_PER_ROUND;
-    wonCapsAll   = [];
+    wonCapsAll     = [];
     _pendingWon        = [];
     _pendingFaceDown   = [];
     _pendingThrowsDone = 0;
@@ -327,7 +290,8 @@ function buildStack() {
     ui.updateThrowPips(THROWS_PER_ROUND, THROWS_PER_ROUND);
     ui.updatePileButtons(caps.map(c => c.def), []);
     ui.setStatus('Stacker caps...');
-    delay(() => { if (phase === 'idle') ui.setStatus('Klik på banen for at kaste!'); }, 300);
+    ui.setActionPrompt(null);
+    delay(() => { if (phase === 'idle') ui.setActionPrompt('Klik på banen for at kaste!'); }, 300);
 }
 
 
@@ -364,7 +328,9 @@ function applyRestack() {
     settleStart  = 0;
     aimingStart  = 0;
     fallingStart = 0;
-    ui.setStatus(`Kast ${_pendingThrowsDone + 1}/${THROWS_PER_ROUND} · Klik for at kaste!`);
+    prevSlammerY = null;
+    ui.setStatus(`Kast ${_pendingThrowsDone + 1}/${THROWS_PER_ROUND}`);
+    ui.setActionPrompt('Klik for at kaste!');
     phase = 'idle';
 }
 
@@ -382,6 +348,11 @@ function endThrow(miss = false) {
         slammer.body.type = BODY_TYPES.STATIC;
         slammer.body.velocity.set(0, 0, 0);
         slammer.body.angularVelocity.set(0, 0, 0);
+        // Cannon-es tillader lidt kontakt-penetration ved høj hastighed — snap slammeren
+        // op til overfladen hvis den er endt under det visuelle gulv (mat er ved y≈0.04)
+        if (slammer.body.position.y < SLAM_H / 2 + 0.05) {
+            slammer.body.position.y = SLAM_H / 2 + 0.05;
+        }
     }
 
     // Sorter caps i face-up og face-down
@@ -396,6 +367,17 @@ function endThrow(miss = false) {
     wonCapsAll.push(...wonNow.map(c => c.def));
     totalScore += wonNow.length;
     throwsLeft--;
+
+    // Pop-animation: caps forsvinder fra måtten, ikon svæver ud af Flipped-knap
+    const popDelay = Math.max(80, 500 / Math.max(wonNow.length, 1));
+    wonNow.forEach((cap, i) => {
+        delay(() => {
+            popCapMesh(cap.mesh);
+            ui.popCollectIcon(cap.def);
+        }, i * popDelay);
+    });
+
+    ui.updatePileButtons(faceDown.map(c => c.def), wonCapsAll);
     ui.setScore(totalScore);
     ui.updateThrowPips(throwsLeft, THROWS_PER_ROUND);
 
@@ -405,18 +387,33 @@ function endThrow(miss = false) {
         _pendingFaceDown   = faceDown;
         _pendingThrowsDone = THROWS_PER_ROUND - throwsLeft;
 
-        const msg = miss
-            ? `Miss! · ${faceDown.length} caps tilbage · Klik for at fortsætte`
-            : `${wonNow.length} caps vendt · ${faceDown.length} tilbage · Klik for at fortsætte`;
-        ui.setStatus(msg);
+        const info = miss
+            ? `Miss! · ${faceDown.length} caps tilbage`
+            : `${wonNow.length} caps vendt · ${faceDown.length} tilbage`;
+        ui.setStatus(info);
+        ui.setActionPrompt('Klik for at fortsætte');
         phase = 'ready'; // venter på klik → applyRestack()
 
     } else {
         // Ingen kast tilbage eller ingen caps — runde slut
         phase = 'done';
         ui.showResults(wonCapsAll.length, totalScore, wonCapsAll);
-        ui.setStatus('Runde slut! · Klik for næste runde');
+        ui.setStatus('Runde slut!');
+        ui.setActionPrompt('Klik for næste runde');
     }
+}
+
+function popCapMesh(mesh) {
+    const start = performance.now();
+    const dur   = 220;
+    (function tick() {
+        const t = Math.min((performance.now() - start) / dur, 1);
+        const s = t < 0.45
+            ? 1 + (t / 0.45) * 0.3          // 1 → 1.3
+            : 1.3 * (1 - (t - 0.45) / 0.55); // 1.3 → 0
+        mesh.scale.set(s, s, s);
+        if (t < 1) requestAnimationFrame(tick);
+    })();
 }
 
 function allStill() {
@@ -453,20 +450,28 @@ function animate() {
 
     physics.step(dt, caps.length);
 
-    // Safety net mod tunneling: positionelt cylinder-overlap-tjek hver frame.
+    // Cap tunnel safety net: positionelt cylinder-overlap-tjek hver frame.
     // Cannon-es CCD kræver at broadphase allerede har fundet parret — ved tynde
-    // caps og høj hastighed kan broadphase misse. Denne check er uafhængig.
+    // Cap tunnel safety net — uafhængig af cannon-es CCD.
+    // Bruger slammernes position FRA FORRIGE FRAME (prevSlammerY) til at detektere
+    // pass-throughs: hvis slammeren var OVER cap-zonen sidst og er UNDER toppen nu,
+    // krydsede den zonen i dette step — selv hvis broadphase missede kollisionen.
     if (phase === 'falling' && slammer) {
-        const sp = slammer.body.position;
+        const sp   = slammer.body.position;
+        const prev = prevSlammerY ?? sp.y;
+        const halfSum = (SLAM_H + POG_H) / 2; // 0.205 — summen af halvdele
         for (const { body } of caps) {
             const cp  = body.position;
-            const dy  = sp.y - cp.y;
             const dxz = Math.sqrt((sp.x - cp.x) ** 2 + (sp.z - cp.z) ** 2);
-            if (dxz < POG_R * 2 && Math.abs(dy) < (SLAM_H + POG_H) / 2) {
+            // Horisontalt overlap + slammernes bane krydsede cap-zonens y-interval denne frame
+            if (dxz < POG_R * 2 && sp.y < cp.y + halfSum && prev > cp.y - halfSum) {
                 collisions.forceBlast();
                 break;
             }
         }
+        prevSlammerY = sp.y;
+    } else {
+        prevSlammerY = null;
     }
 
     collisions.checkPending();
@@ -498,11 +503,11 @@ function animate() {
     if (phase === 'settling') {
         const el = now - settleStart;
         if (el > 400) {
-            const t    = Math.min((el - 400) / 1500, 1);
-            const damp = 0.04 + t * 0.92;
+            const t       = Math.min((el - 400) / 1500, 1);
+            const tAngular = Math.min((el - 400) / 600, 1); // angular dæmpes 2.5x hurtigere
             caps.forEach(({ body }) => {
-                body.linearDamping  = damp;
-                body.angularDamping = damp;
+                body.linearDamping  = 0.04 + t        * 0.92;
+                body.angularDamping = 0.15 + tAngular * 0.81; // starter lidt højere, når 0.96 på ~600ms
             });
         }
         if (el > 5000 || (el > 600 && allStill())) endThrow();
@@ -512,6 +517,6 @@ function animate() {
     render.render();
 }
 
-await loadTextures();
+const texCache = await loadTextures();
 buildStack();
 animate();
