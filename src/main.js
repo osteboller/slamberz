@@ -292,7 +292,7 @@ function buildStack() {
     // Afliv alle ventende setTimeout-kald øjeblikkeligt — ingen forsinket
     // logik fra den forrige runde kan nå at røre state efter dette punkt.
     cancelAllTimers();
-    suppressNextAim = false;
+    suppressNextAim = true;    // ← undertrykker det stray aim-event fra klikket
 
     caps.forEach(({ mesh, body }) => { render.removeMesh(mesh); physics.world.removeBody(body); });
     caps = [];
