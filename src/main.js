@@ -24,12 +24,27 @@ const powerBar   = new PowerBar();
 // Power bar er altid aktiv — det er kernemekanitten
 powerBar.enable();
 
+// ─── TIMER REGISTRY ───────────────────────────────────────────────────────────
+// Alle forsinkede kald registreres her, så cancelAllTimers() kan aflive dem alle
+// på én gang — uanset hvilken fase spillet er i når reset trykkes.
+const _timers = new Set();
+
+function delay(fn, ms) {
+    const id = setTimeout(() => { _timers.delete(id); fn(); }, ms);
+    _timers.add(id);
+    return id;
+}
+
+function cancelAllTimers() {
+    _timers.forEach(clearTimeout);
+    _timers.clear();
+}
+
 // ─── STATE ───────────────────────────────────────────────────────────────────
 let caps        = [];
 let slammer     = null;
 // idle → aiming → falling → blasted → settling → done
 let phase       = 'idle';
-let roundId     = 0;       
 let blastTime   = 0;
 let settleStart = 0;
 let totalScore  = 0;
@@ -225,8 +240,10 @@ function spawnSlammer(x, z, speed, mass) {
     const stackTop = POG_H * 0.5 + (caps.length - 1) * (POG_H + 0.01) + SLAM_H + 0.5;
     body.position.set(x, stackTop + 6, z);
     body.velocity.set(0, -speed, 0);
+    // ccdSpherRadius skal dække slammers faktiske bounding sphere — ikke bare et vilkårligt lille tal.
+    // For lille radius → CCD misser off-center kollisioner når stakken er lav.
     body.ccdSpherRadius     = Math.sqrt(POG_R * POG_R + (SLAM_H / 2) * (SLAM_H / 2)); // ≈ 1.21
-    body.ccdMotionThreshold = 0.1; // Aktiver CCD når displacement > 0.1 unit/step (ved 65 speed ≈ 0.54/step)
+    body.ccdMotionThreshold = 0.1;
     body.userData = { kind: 'slammer' };
     physics.world.addBody(body);
 
@@ -266,7 +283,11 @@ function blast() {
 
 // ─── ROUND MANAGEMENT ────────────────────────────────────────────────────────
 function buildStack() {
-    roundId++;                 // ← tilføj som første linje — ugyldiggør alle ventende callbacks
+    // Afliv alle ventende setTimeout-kald øjeblikkeligt — ingen forsinket
+    // logik fra den forrige runde kan nå at røre state efter dette punkt.
+    cancelAllTimers();
+    suppressNextAim = false;
+
     caps.forEach(({ mesh, body }) => { render.removeMesh(mesh); physics.world.removeBody(body); });
     caps = [];
     if (slammer) {
@@ -280,23 +301,24 @@ function buildStack() {
         spawnCap(CAP_DEFS[i % CAP_DEFS.length], POG_H * 0.5 + i * (POG_H + 0.01));
     }
 
-    phase       = 'idle';
-    blastTime   = 0;
-    settleStart = 0;
-    aimingStart = 0;
-    settleMaxR  = 0;
-    throwsLeft  = THROWS_PER_ROUND;
-    wonCapsAll  = [];
+    phase        = 'idle';
+    blastTime    = 0;
+    settleStart  = 0;
+    aimingStart  = 0;
+    fallingStart = 0;
+    settleMaxR   = 0;
+    throwsLeft   = THROWS_PER_ROUND;
+    wonCapsAll   = [];
     collisions.reset();
     powerBar.reset();
     cam.zoomIn();
-    render.setReticleVisible(false); // skjules ved rundestart — vises ved første musbevægelse
+    render.setReticleVisible(false);
 
     ui.hideResults();
     ui.updateThrowPips(THROWS_PER_ROUND, THROWS_PER_ROUND);
     ui.updatePileButtons(caps.map(c => c.def), []);
     ui.setStatus('Stacker caps...');
-    setTimeout(() => { if (phase === 'idle') ui.setStatus('Klik på banen for at kaste!'); }, 300);
+    delay(() => { if (phase === 'idle') ui.setStatus('Klik på banen for at kaste!'); }, 300);
 }
 
 function endThrow(miss = false) {
@@ -331,6 +353,7 @@ function endThrow(miss = false) {
     ui.updateThrowPips(throwsLeft, THROWS_PER_ROUND);
 
     if (throwsLeft > 0 && faceDown.length > 0) {
+        // Flere kast tilbage — kort pause, derefter restack
         phase = 'restacking';
         const throwsDone = THROWS_PER_ROUND - throwsLeft;
         const msg = miss
@@ -338,10 +361,7 @@ function endThrow(miss = false) {
             : `${wonNow.length} caps vendt · ${faceDown.length} tilbage · kast ${throwsDone}/${THROWS_PER_ROUND}`;
         ui.setStatus(msg);
 
-        const capturedRound = roundId; // ← fang generation inden timeout
-        setTimeout(() => {
-            if (roundId !== capturedRound) return; // ← reset blev trykket, bail ud
-
+        delay(() => {
             // Fjern vundne caps fra scene + physics
             wonNow.forEach(({ mesh, body }) => {
                 render.removeMesh(mesh);
@@ -383,10 +403,11 @@ function endThrow(miss = false) {
             fallingStart = 0;
 
             ui.setStatus(`Kast ${throwsDone + 1}/${THROWS_PER_ROUND} · Klik for at kaste!`);
-            setTimeout(() => { phase = 'idle'; }, 150);
+            delay(() => { phase = 'idle'; }, 150);
         }, 1500);
 
     } else {
+        // Ingen kast tilbage eller ingen caps — runde slut
         phase = 'done';
         ui.showResults(wonCapsAll.length, totalScore, wonCapsAll);
         ui.setStatus('Runde slut! · Klik for næste runde');
