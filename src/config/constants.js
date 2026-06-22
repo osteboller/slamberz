@@ -24,12 +24,24 @@ export const SLAMMER_DEFS = [
 ];
 
 export const CAP_DEFS = [
-    { color: 0xdd3344, name: 'Red Raptor',   mass: 1.0, bounce: 0.3, texFront: 'assets/caps/raptor_strike/01_red.png',    texBack: 'assets/caps/raptor_strike/01_red_b.png'    },
-    { color: 0x2277cc, name: 'Blue Raptor',  mass: 1.0, bounce: 0.3, texFront: 'assets/caps/raptor_strike/02_blue.png',   texBack: 'assets/caps/raptor_strike/02_blue_b.png'   },
-    { color: 0xdd9911, name: 'Gold Raptor',  mass: 1.0, bounce: 0.3, texFront: 'assets/caps/raptor_strike/03_yellow.png', texBack: 'assets/caps/raptor_strike/03_yellow_b.png' },
-    { color: 0x7755ee, name: 'Silver',       mass: 1.0, bounce: 0.3, texFront: 'assets/caps/raptor_strike/12_silver.png', texBack: 'assets/caps/raptor_strike/12_silver_b.png' },
-    { color: 0xe05522, name: 'Mech',         mass: 1.0, bounce: 0.3, texFront: 'assets/caps/raptor_strike/16_mech.png',   texBack: 'assets/caps/raptor_strike/16_mech_b.png'   },
-    { color: 0x22aa77, name: 'Mecha',        mass: 1.0, bounce: 0.3, texFront: 'assets/caps/raptor_strike/18_mecha.png',  texBack: 'assets/caps/raptor_strike/18_mecha_b.png'  },
-    { color: 0xcc3377, name: 'Alien',        mass: 1.0, bounce: 0.3, texFront: 'assets/caps/legacy_discs/18_alien.png',   texBack: 'assets/caps/legacy_discs/18_alien_b.png'   },
-    { color: 0x44aa22, name: '8-Ball',       mass: 1.0, bounce: 0.3, texFront: 'assets/caps/legacy_discs/24_8ball.png',   texBack: 'assets/caps/legacy_discs/24_8ball_b.png'   },
+    // Raptor Strike
+    { series: 'raptor_strike', color: 0xdd3344, name: 'Red Raptor',      mass: 1.0, bounce: 0.3, texFront: 'assets/caps/raptor_strike/01_red.png',    texBack: 'assets/caps/raptor_strike/01_red_b.png'    },
+    { series: 'raptor_strike', color: 0x2277cc, name: 'Blue Raptor',     mass: 1.0, bounce: 0.3, texFront: 'assets/caps/raptor_strike/02_blue.png',   texBack: 'assets/caps/raptor_strike/02_blue_b.png'   },
+    { series: 'raptor_strike', color: 0xdd9911, name: 'Gold Raptor',     mass: 1.0, bounce: 0.3, texFront: 'assets/caps/raptor_strike/03_yellow.png', texBack: 'assets/caps/raptor_strike/03_yellow_b.png' },
+    { series: 'raptor_strike', color: 0x7755ee, name: 'Silver',          mass: 1.0, bounce: 0.3, texFront: 'assets/caps/raptor_strike/12_silver.png', texBack: 'assets/caps/raptor_strike/12_silver_b.png' },
+    { series: 'raptor_strike', color: 0xe05522, name: 'Mech',            mass: 1.0, bounce: 0.3, texFront: 'assets/caps/raptor_strike/16_mech.png',   texBack: 'assets/caps/raptor_strike/16_mech_b.png'   },
+    { series: 'raptor_strike', color: 0x22aa77, name: 'Mecha',           mass: 1.0, bounce: 0.3, texFront: 'assets/caps/raptor_strike/18_mecha.png',  texBack: 'assets/caps/raptor_strike/18_mecha_b.png'  },
+    // Legacy Discs (del af Mixed)
+    { series: 'legacy_discs',  color: 0xcc3377, name: 'Alien',           mass: 1.0, bounce: 0.3, texFront: 'assets/caps/legacy_discs/18_alien.png',   texBack: 'assets/caps/legacy_discs/18_alien_b.png'   },
+    { series: 'legacy_discs',  color: 0x44aa22, name: '8-Ball',          mass: 1.0, bounce: 0.3, texFront: 'assets/caps/legacy_discs/24_8ball.png',   texBack: 'assets/caps/legacy_discs/24_8ball_b.png'   },
+    // Scary Skullz
+    { series: 'scary_skullz',  color: 0xf0e0c0, name: 'Jebus Skull',     mass: 1.0, bounce: 0.3, texFront: 'assets/caps/scary_skullz/01_jebus_skull.png',      texBack: 'assets/caps/scary_skullz/01_jebus_skull_b.png'    },
+    { series: 'scary_skullz',  color: 0x553366, name: 'Street Skull',    mass: 1.0, bounce: 0.3, texFront: 'assets/caps/scary_skullz/02_street_skull.png',     texBack: 'assets/caps/scary_skullz/02_street_skull_b.png'   },
+    { series: 'scary_skullz',  color: 0xcc2211, name: 'Jpn Skull',       mass: 1.0, bounce: 0.3, texFront: 'assets/caps/scary_skullz/03_jpn_skull.png',        texBack: 'assets/caps/scary_skullz/03_jpn_skull_b.png'      },
+    { series: 'scary_skullz',  color: 0x00bb88, name: 'Cyber Skull',     mass: 1.0, bounce: 0.3, texFront: 'assets/caps/scary_skullz/04_cyber_skull.png',      texBack: 'assets/caps/scary_skullz/04_cyber_skull_b.png'    },
+    { series: 'scary_skullz',  color: 0x5a3010, name: 'Critter Skulls',  mass: 1.0, bounce: 0.3, texFront: 'assets/caps/scary_skullz/05_critter_skulls.png',   texBack: 'assets/caps/scary_skullz/05_critter_skulls_b.png' },
+    { series: 'scary_skullz',  color: 0x1a6622, name: 'Snek Skull',      mass: 1.0, bounce: 0.3, texFront: 'assets/caps/scary_skullz/06_snek_skull.png',       texBack: 'assets/caps/scary_skullz/06_snek_skull_b.png'     },
+    { series: 'scary_skullz',  color: 0xcc7700, name: 'Chief Skull',     mass: 1.0, bounce: 0.3, texFront: 'assets/caps/scary_skullz/07_chief_skull.png',      texBack: 'assets/caps/scary_skullz/07_chief_skull_b.png'    },
+    { series: 'scary_skullz',  color: 0xb08840, name: 'Prairie Skull',   mass: 1.0, bounce: 0.3, texFront: 'assets/caps/scary_skullz/08_prarie_skull.png',     texBack: 'assets/caps/scary_skullz/08_prarie_skull_b.png'   },
+    { series: 'scary_skullz',  color: 0x1122aa, name: 'Dual Snake Skull',mass: 1.0, bounce: 0.3, texFront: 'assets/caps/scary_skullz/09_dual_snake_skull.png', texBack: 'assets/caps/scary_skullz/09_dual_snake_skull_b.png' },
 ];
