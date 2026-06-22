@@ -56,7 +56,7 @@ export class RenderEngine {
         // Korkmat — mørk kant
         const border = new THREE.Mesh(
             new THREE.CircleGeometry(12.0, 72),
-            new THREE.MeshStandardMaterial({ color: 0x6b4218, roughness: 0.95 })
+            new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.95 })
         );
         border.rotation.x = -Math.PI / 2;
         border.position.y = 0.02;
@@ -82,59 +82,54 @@ export class RenderEngine {
     }
 
     _createCorkTexture() {
-        const S   = 512;
-        const cvs = document.createElement('canvas');
-        cvs.width = cvs.height = S;
-        const ctx = cvs.getContext('2d');
+    const S   = 512;
+    const cvs = document.createElement('canvas');
+    cvs.width = cvs.height = S;
+    const ctx = cvs.getContext('2d');
 
-        // Basis korkfarve — varm beige
-        ctx.fillStyle = '#c09050';
-        ctx.fillRect(0, 0, S, S);
+    // Basis asfalt — mørk antracit
+    ctx.fillStyle = '#1c1c1c';
+    ctx.fillRect(0, 0, S, S);
 
-        // Stor-skala tonal variation — uregelmæssige blobs, ingen linjer
-        for (let i = 0; i < 700; i++) {
-            const x  = Math.random() * S;
-            const y  = Math.random() * S;
-            const rx = 8 + Math.random() * 28;
-            const ry = 6 + Math.random() * 18;
-            ctx.beginPath();
-            ctx.ellipse(x, y, rx, ry, Math.random() * Math.PI, 0, Math.PI * 2);
-            ctx.fillStyle = Math.random() > 0.5
-                ? `rgba(55,30,8,${0.01 + Math.random() * 0.05})`
-                : `rgba(205,160,75,${0.01 + Math.random() * 0.04})`;
-            ctx.fill();
-        }
-
-        // Korkceller — uregelmæssige ellipser i alle vinkler (tværsnit af bark)
-        for (let i = 0; i < 600; i++) {
-            const x  = Math.random() * S;
-            const y  = Math.random() * S;
-            const rx = 2 + Math.random() * 7;
-            const ry = 1.5 + Math.random() * 4;
-            ctx.beginPath();
-            ctx.ellipse(x, y, rx, ry, Math.random() * Math.PI, 0, Math.PI * 2);
-            ctx.fillStyle = Math.random() > 0.5
-                ? `rgba(75,42,10,${0.07 + Math.random() * 0.2})`
-                : `rgba(210,170,90,${0.06 + Math.random() * 0.14})`;
-            ctx.fill();
-        }
-
-        // Fine porer — tæt spredte mørke prikker
-        for (let i = 0; i < 3500; i++) {
-            const x = Math.random() * S;
-            const y = Math.random() * S;
-            const r = 0.3 + Math.random() * 1.4;
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(60,32,6,${0.1 + Math.random() * 0.3})`;
-            ctx.fill();
-        }
-
-        const tex = new THREE.CanvasTexture(cvs);
-        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(3, 3);
-        return tex;
+    // Groft aggregat — lyse sten i alle størrelser
+    for (let i = 0; i < 1800; i++) {
+        const x = Math.random() * S;
+        const y = Math.random() * S;
+        const r = 0.5 + Math.random() * 3.5;
+        const v = Math.floor(55 + Math.random() * 80);
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${v},${v},${v},${0.4 + Math.random() * 0.5})`;
+        ctx.fill();
     }
+
+    // Fin tekstur — støv og sand
+    for (let i = 0; i < 4000; i++) {
+        const x = Math.random() * S;
+        const y = Math.random() * S;
+        const r = 0.2 + Math.random() * 0.8;
+        const v = Math.floor(40 + Math.random() * 60);
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${v},${v},${v},${0.2 + Math.random() * 0.4})`;
+        ctx.fill();
+    }
+
+    // Subtile revner
+    for (let i = 0; i < 6; i++) {
+        ctx.beginPath();
+        ctx.moveTo(Math.random() * S, Math.random() * S);
+        ctx.lineTo(Math.random() * S, Math.random() * S);
+        ctx.strokeStyle = `rgba(8,8,8,${0.3 + Math.random() * 0.4})`;
+        ctx.lineWidth   = 0.5 + Math.random() * 1.5;
+        ctx.stroke();
+    }
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(3, 3);
+    return tex;
+}
 
     _setupReticle() {
         const geometry = new THREE.RingGeometry(0.5, 0.75, 48);
