@@ -31,11 +31,22 @@ export class UIManager {
     showResults(won, totalScore, wonCaps) {
         document.getElementById('score').textContent    = totalScore;
         document.getElementById('wonCount').textContent = won;
-        document.getElementById('wonList').innerHTML = wonCaps.map(d =>
-            `<span style="display:inline-block;width:18px;height:18px;border-radius:50%;
-            background:#${d.color.toString(16).padStart(6,'0')};margin:2px;
-            border:1px solid rgba(255,255,255,0.3)"></span>`
-        ).join('');
+
+        // Brug tekstur-thumbnails præcis som pile-overlayets cap-thumb system
+        document.getElementById('wonList').innerHTML = wonCaps.map(d => {
+            if (d.texFront) {
+                return `<img src="${d.texFront}" alt="${d.name}" title="${d.name}"
+                    style="width:40px;height:40px;border-radius:50%;object-fit:cover;
+                    margin:3px;border:2px solid rgba(255,255,255,0.25);
+                    cursor:default;">`;
+            }
+            // Fallback til farvecikel hvis tekstur mangler
+            const hex = '#' + d.color.toString(16).padStart(6, '0');
+            return `<span title="${d.name}" style="display:inline-block;width:40px;height:40px;
+                    border-radius:50%;background:${hex};margin:3px;
+                    border:2px solid rgba(255,255,255,0.2)"></span>`;
+        }).join('');
+
         document.getElementById('results').style.display = 'block';
     }
 
