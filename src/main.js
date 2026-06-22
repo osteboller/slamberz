@@ -517,6 +517,15 @@ function animate() {
     render.render();
 }
 
-const texCache = await loadTextures();
+const loadingFill   = document.getElementById('loading-fill');
+const loadingScreen = document.getElementById('loading-screen');
+
+const texCache = await loadTextures(p => {
+    if (loadingFill) loadingFill.style.width = (p * 100) + '%';
+});
+
+loadingScreen.style.opacity = '0';
+setTimeout(() => { loadingScreen.style.display = 'none'; }, 400);
+
 buildStack();
 animate();
