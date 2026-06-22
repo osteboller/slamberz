@@ -101,6 +101,7 @@ input.onAim = (x, y, z) => {
 // Klik under 'done' starter næste runde direkte (ingen knap nødvendig)
 input.onShot = (x, y, z) => {
     if (ui.isOverlayOpen()) { suppressNextAim = true; return; }
+    if (phase === 'ready') { phase = 'idle'; suppressNextAim = true; return; } // ← ny linje
     if (phase === 'restacking') return;
     if (phase === 'done') { suppressNextAim = true; buildStack(); return; }
     if (phase !== 'idle') return;
@@ -113,7 +114,7 @@ input.onShot = (x, y, z) => {
 
     render.setReticlePosition(pendingX, pendingY, pendingZ);
     render.setReticleVisible(true);
-    cam.zoomOut(); // Begynd zoom under 1-sekunders pausen så kameraet er klar til action
+    cam.zoomOut();
 
     phase       = 'aiming';
     aimingStart = performance.now();
@@ -403,7 +404,7 @@ function endThrow(miss = false) {
             fallingStart = 0;
 
             ui.setStatus(`Kast ${throwsDone + 1}/${THROWS_PER_ROUND} · Klik for at kaste!`);
-            delay(() => { phase = 'idle'; }, 150);
+            phase = 'ready'; // ← var: delay(() => { phase = 'idle'; }, 150)
         }, 1500);
 
     } else {
