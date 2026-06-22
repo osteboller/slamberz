@@ -222,6 +222,45 @@ body {
 #results p    { font-size: 12px; color: #aaa; margin: 3px 0 6px; }
 #wonList      { min-height: 20px; }
 
+/* ─── LOADING SCREEN ────────────────────────────────────────────────────── */
+#loading-screen {
+    position: fixed;
+    inset: 0;
+    background: #1e2530;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 1000;
+    transition: opacity 0.4s;
+}
+#loading-title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #ffcc00;
+    letter-spacing: 0.05em;
+}
+#loading-bar-bg {
+    width: 220px;
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+#loading-fill {
+    height: 100%;
+    width: 0%;
+    background: #ffcc00;
+    border-radius: 3px;
+    transition: width 0.15s ease-out;
+}
+#loading-label {
+    font-size: 12px;
+    color: #555;
+    letter-spacing: 0.05em;
+}
+
 /* ─── CAP COLLECT ANIMATION ─────────────────────────────────────────────── */
 @keyframes collect-float {
     0%   { opacity: 0;   transform: translateY(0)    scale(0.4); }
