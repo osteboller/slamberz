@@ -224,8 +224,8 @@ function spawnSlammer(x, z, speed, mass) {
     const stackTop = POG_H * 0.5 + (caps.length - 1) * (POG_H + 0.01) + SLAM_H + 0.5;
     body.position.set(x, stackTop + 6, z);
     body.velocity.set(0, -speed, 0);
-    body.ccdSpherRadius     = 0.4;
-    body.ccdMotionThreshold = 0.005;
+    body.ccdSpherRadius     = Math.sqrt(POG_R * POG_R + (SLAM_H / 2) * (SLAM_H / 2)); // ≈ 1.21
+    body.ccdMotionThreshold = 0.1; // Aktiver CCD når displacement > 0.1 unit/step (ved 65 speed ≈ 0.54/step)
     body.userData = { kind: 'slammer' };
     physics.world.addBody(body);
 
@@ -422,7 +422,7 @@ function animate() {
         endThrow(true);
     }
 
-    physics.step(dt);
+    physics.step(dt, caps.length);
     collisions.checkPending();
     render.sync(caps, slammer);
 
