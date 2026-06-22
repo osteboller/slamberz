@@ -42,9 +42,12 @@ export class CollisionManager {
         this._active      = false;
     }
     // Safety net kaldt fra game loop når positionelt overlap detekteres —
-    // sikrer blast selv hvis Cannon-es broadphase missede kollisionen
+    // sikrer blast selv hvis Cannon-es broadphase missede kollisionen.
+    // Blast vinder over miss: var slammeren tæt nok på en cap til at positionen
+    // bekræfter passage, skal det tælle som et hit — ikke et miss.
     forceBlast() {
-        if (!this._active || this.pendingBlast || this.pendingMiss) return;
+        if (!this._active || this.pendingBlast) return;
         this.pendingBlast = true;
+        this.pendingMiss  = false;
     }
 }
