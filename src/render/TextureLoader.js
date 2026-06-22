@@ -21,14 +21,27 @@ function createKnurlTexture(rimColor) {
     return new THREE.CanvasTexture(canvas);
 }
 
-export async function loadTextures() {
+export async function loadTextures(onProgress) {
     const cache  = {};
     const loader = new THREE.TextureLoader();
-    const load   = url => new Promise(res => {
+
+    const urls = [
+        ...CAP_DEFS.flatMap(d => [d.texFront, d.texBack]),
+        ...SLAMMER_DEFS.flatMap(d => [d.texFront, d.texBack]),
+    ].filter(Boolean);
+    const total  = urls.length;
+    let   loaded = 0;
+
+    const load = url => new Promise(res => {
         loader.load(url, tex => {
             tex.colorSpace = THREE.SRGBColorSpace;
+            if (onProgress) onProgress(++loaded / total);
             res(tex);
-        }, undefined, () => { console.warn('Tekstur mangler:', url); res(null); });
+        }, undefined, () => {
+            console.warn('Tekstur mangler:', url);
+            if (onProgress) onProgress(++loaded / total);
+            res(null);
+        });
     });
 
     for (const def of CAP_DEFS) {
