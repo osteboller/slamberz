@@ -15,11 +15,70 @@
         <div id="throw-pips"></div>
     </div>
 
-    <!-- Top-right: reset, slammer, fullscreen -->
+    <!-- Top-right: hjælp, reset, slammer, fullscreen -->
     <div id="corner-btns">
+        <button id="help-btn" title="Sådan spiller du">?</button>
         <button id="resetBtn" title="Reset runde">↺</button>
-        <button id="slammer-btn" title="Slammer indstillinger">⚙</button>
+        <button id="slammer-btn" title="Indstillinger">⚙</button>
         <button id="fullscreen-btn" title="Fuld skærm">⛶</button>
+    </div>
+
+    <!-- Hjælp-modal -->
+    <div id="help-modal" role="dialog" aria-modal="true" aria-label="Spillevejledning">
+        <div id="help-modal-inner">
+            <button id="help-close" title="Luk">✕</button>
+            <h2>Sådan spiller du</h2>
+
+            <div class="help-section">
+                <div class="help-icon">🎯</div>
+                <div>
+                    <strong>Målet</strong>
+                    <p>Vend så mange caps som muligt med forsiden opad. Caps der lander med billedsiden op tæller som <em>vundet</em>.</p>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-icon">👆</div>
+                <div>
+                    <strong>Sigtning & kraft</strong>
+                    <p>Tap på banen én gang for at skyde. <strong>Hvor du tapper</strong> bestemmer sigtningen. <strong>Hvornår du tapper</strong> (mens powerbaren svinger) bestemmer kraft-niveauet. Begge afgøres af det samme tryk!</p>
+                </div>
+            </div>
+
+            <div class="help-section help-power-section">
+                <div class="help-power-demo" aria-hidden="true">
+                    <div id="help-power-bar">
+                        <div id="help-power-fill"></div>
+                    </div>
+                </div>
+                <div>
+                    <strong>Kraftniveauer</strong>
+                    <p>Powerbaren svinger op og ned. Dit kraft-niveau afgøres af hvor powerbaren er når du tapper:</p>
+                    <ul>
+                        <li><span class="pwr-green">Grønt</span> = fuld kraft — kraftig blast, svær at kontrollere</li>
+                        <li><span class="pwr-yellow">Gult</span> = middel kraft</li>
+                        <li><span class="pwr-red">Rødt</span> = svag blast — god kontrol</li>
+                    </ul>
+                    <p class="help-tip">Tip: Timing er alt! Tap når powerbaren er der hvor du vil have kraft-niveauet.</p>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-icon">🔄</div>
+                <div>
+                    <strong>Runder</strong>
+                    <p>Du har <strong>3 kast</strong> per runde. Mellem kast genopstables caps automatisk — klik for at bekræfte og fortsætte.</p>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-icon">⚙</div>
+                <div>
+                    <strong>Indstillinger</strong>
+                    <p>Brug ⚙-knappen øverst til højre for at vælge slammer og justere fysik og antal caps.</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Bottom-left: vundne caps -->
@@ -42,14 +101,19 @@
 
     <!-- Cap detail popup -->
     <div id="cap-detail">
-        <div id="cap-viewer-container"></div>
         <div id="cap-detail-name"></div>
         <div id="cap-detail-sub"></div>
+        <div id="cap-viewer-container"></div>
+    </div>
+
+    <!-- Slammer detail popup -->
+    <div id="slammer-detail">
+        <div id="slammer-detail-name"></div>
+        <div id="slammer-viewer-container"></div>
     </div>
 
     <div id="results">
-        <div class="big" id="wonCount">0</div>
-        <p>caps vendt</p>
+        <p id="wonLabel" style="margin:0 0 8px;font-size:1.1em;font-weight:bold;"></p>
         <div id="wonList"></div>
     </div>
 

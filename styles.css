@@ -66,22 +66,138 @@ body {
     #fullscreen-btn { display: flex; }
 }
 
+/* ─── HJÆLP-MODAL ────────────────────────────────────────────────────────── */
+#help-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 400;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(3px);
+}
+#help-modal.open {
+    display: flex;
+}
+#help-modal-inner {
+    position: relative;
+    background: rgba(18, 22, 30, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    padding: 24px 24px 20px;
+    width: min(440px, calc(100vw - 32px));
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    color: #ddd;
+    font-size: 14px;
+    line-height: 1.55;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+}
+#help-modal-inner h2 {
+    font-size: 18px;
+    color: #ffcc00;
+    margin-bottom: 16px;
+    letter-spacing: 0.03em;
+}
+#help-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+    transition: color 0.15s;
+}
+#help-close:hover { color: #fff; }
+
+.help-section {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.help-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+.help-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    width: 28px;
+    text-align: center;
+    margin-top: 1px;
+}
+.help-section strong {
+    display: block;
+    color: #fff;
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+.help-section p  { color: #aaa; font-size: 13px; margin: 0; }
+.help-section ul { color: #aaa; font-size: 13px; margin: 6px 0 0 16px; }
+.help-section li { margin-bottom: 2px; }
+.help-tip {
+    margin-top: 8px !important;
+    color: #ffcc00 !important;
+    font-size: 12px !important;
+}
+.pwr-green  { color: #22aa44; font-weight: bold; }
+.pwr-yellow { color: #e8b800; font-weight: bold; }
+.pwr-red    { color: #cc2222; font-weight: bold; }
+
+/* Mini power-bar demo (CSS-animeret, ingen JS nødvendigt) */
+.help-power-section { align-items: center; }
+.help-power-demo {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+}
+#help-power-bar {
+    width: 18px;
+    height: 90px;
+    border: 2px solid rgba(255,255,255,0.3);
+    background: linear-gradient(to top, #cc2222 0%, #e8b800 50%, #22aa44 100%);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+#help-power-fill {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    background: rgba(8, 8, 12, 0.92);
+    animation: help-bar-oscillate 2.5s ease-in-out infinite;
+}
+@keyframes help-bar-oscillate {
+    0%   { height: 100%; }
+    45%  { height: 0%;   }
+    55%  { height: 0%;   }
+    100% { height: 100%; }
+}
+
 /* ─── PILE BUTTONS (bund-venstre og bund-højre) ──────────────────────────── */
 .pile-btn {
     position: absolute;
     bottom: 20px;
-    width: 54px;
-    height: 44px;
+    width: 72px;
+    height: 60px;
     background: rgba(0, 0, 0, 0.75);
     color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 3px;
     transition: background 0.15s;
 }
 .pile-btn:hover { background: rgba(255, 255, 255, 0.15); }
@@ -89,12 +205,12 @@ body {
 #pile-rem-btn { right: 20px; }
 
 .pile-btn span:first-child {
-    font-size: 13px;
+    font-size: 17px;
     font-weight: bold;
     line-height: 1;
 }
 .pile-btn-label {
-    font-size: 9px;
+    font-size: 12px;
     color: #666;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -153,7 +269,7 @@ body {
 #cap-viewer-container {
     width: 220px;
     height: 220px;
-    margin: 0 auto 12px;
+    margin: 10px auto 0;
     border-radius: 12px;
     overflow: hidden;
     cursor: grab;
@@ -169,6 +285,35 @@ body {
     font-size: 11px;
     color: #666;
     margin-top: 3px;
+}
+
+#slammer-detail {
+    display: none;
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.95);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    padding: 20px;
+    z-index: 300;
+    text-align: center;
+    min-width: 160px;
+}
+#slammer-viewer-container {
+    width: 220px;
+    height: 220px;
+    margin: 10px auto 0;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: grab;
+    background: rgba(255,255,255,0.03);
+}
+#slammer-viewer-container:active { cursor: grabbing; }
+#slammer-detail-name {
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff;
 }
 
 /* ─── STATUS BAR ─────────────────────────────────────────────────────────── */
@@ -270,8 +415,8 @@ body {
 
 .collect-icon {
     position: fixed;
-    width: 34px;
-    height: 34px;
+    width: 51px;
+    height: 51px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid rgba(255, 204, 0, 0.85);
