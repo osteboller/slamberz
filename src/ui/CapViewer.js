@@ -1,4 +1,4 @@
-import { POG_R, POG_H } from '../config/constants.js';
+import { POG_R, POG_H, SLAM_H } from '../config/constants.js';
 
 export class CapViewer {
     constructor(container) {
@@ -63,15 +63,23 @@ export class CapViewer {
         el.addEventListener('pointercancel', () => { this._dragging = false; });
     }
 
-    async show(def) {
+    async show(def, type = 'cap') {
         const id = ++this._loadId;
         this._visible = true;
 
+        if (type === 'slammer') {
+            await this._showSlammer(def, id);
+        } else {
+            await this._showCap(def, id);
+        }
+    }
+
+    async _showCap(def, id) {
         const [frontTex, backTex] = await Promise.all([
             this._loadTex(def.texFront),
             this._loadTexBack(def.texBack),
         ]);
-        if (id !== this._loadId) return; // nyere show() er kaldt imens
+        if (id !== this._loadId) return;
 
         if (this._mesh) {
             this._scene.remove(this._mesh);
@@ -91,6 +99,40 @@ export class CapViewer {
         ];
         this._mesh = new THREE.Mesh(geo, mat);
         // Start med forsiden ~30° vendt mod kameraet — giver 3D-dybde
+        this._mesh.rotation.x = Math.PI / 2 - 0.25;
+        this._mesh.rotation.y = 0.3 + Math.PI / 4 + Math.PI / 6;
+        this._scene.add(this._mesh);
+        this._startLoop();
+    }
+
+    async _showSlammer(def, id) {
+        const [frontTex, backTex] = await Promise.all([
+            this._loadTex(def.texFront),
+            this._loadTexBack(def.texBack),
+        ]);
+        if (id !== this._loadId) return;
+
+        if (this._mesh) {
+            this._scene.remove(this._mesh);
+            this._mesh.geometry.dispose();
+            this._mesh.material.forEach(m => m.dispose());
+        }
+
+        // Slammer bruger samme radius som caps men større højde
+        const geo = new THREE.CylinderGeometry(POG_R, POG_R, SLAM_H * 0.8, 36, 1, false);
+        const mat = [
+            def._knurl
+                ? new THREE.MeshStandardMaterial({ map: def._knurl, roughness: 0.55, metalness: 0.35 })
+                : new THREE.MeshStandardMaterial({ color: 0xccccbb, roughness: 0.3 }),
+            frontTex
+                ? new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.15, metalness: 0.5 })
+                : new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.05, metalness: 0.7 }),
+            backTex
+                ? new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.3, metalness: 0.3 })
+                : new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.2, metalness: 0.4 }),
+        ];
+        this._mesh = new THREE.Mesh(geo, mat);
+        // Start med forsiden vendt mod kameraet
         this._mesh.rotation.x = Math.PI / 2 - 0.25;
         this._mesh.rotation.y = 0.3 + Math.PI / 4 + Math.PI / 6;
         this._scene.add(this._mesh);

@@ -11,7 +11,7 @@ import { PowerBar }           from './ui/PowerBar.js';
 import { Cap }     from './entities/Cap.js';
 import { Slammer } from './entities/Slammer.js';
 import { POG_R, POG_H, SLAM_H, CAP_DEFS, SLAMMER_DEFS, SHOT_DELAY,
-         POWER_SPEED_MIN, POWER_SPEED_MAX, THROWS_PER_ROUND } from './config/constants.js';
+         POWER_SPEED_MIN, POWER_SPEED_MAX, THROWS_PER_ROUND, SETTLE } from './config/constants.js';
 
 // ─── MODULES ─────────────────────────────────────────────────────────────────
 const physics    = new PhysicsEngine();
@@ -231,8 +231,8 @@ function blast() {
 
     caps.forEach(({ body }, i) => {
         body.type           = BODY_TYPES.DYNAMIC;
-        body.linearDamping  = 0.04;
-        body.angularDamping = 0.04;
+        body.linearDamping  = SETTLE.AIR_LINEAR;
+        body.angularDamping = SETTLE.AIR_ANGULAR;
         body.wakeUp();
 
         const angle = (i / caps.length) * Math.PI * 2 + (Math.random() - 0.5) * 1.5;
@@ -397,7 +397,7 @@ function endThrow(miss = false) {
     } else {
         // Ingen kast tilbage eller ingen caps — runde slut
         phase = 'done';
-        ui.showResults(wonCapsAll.length, totalScore, wonCapsAll);
+        ui.showResults(wonCapsAll.length, totalScore, wonCapsAll, faceDown.length === 0);
         ui.setStatus('Runde slut!');
         ui.setActionPrompt('Klik for næste runde');
     }
@@ -405,12 +405,12 @@ function endThrow(miss = false) {
 
 function popCapMesh(mesh) {
     const start = performance.now();
-    const dur   = 220;
+    const dur   = 300;
     (function tick() {
         const t = Math.min((performance.now() - start) / dur, 1);
-        const s = t < 0.45
-            ? 1 + (t / 0.45) * 0.3          // 1 → 1.3
-            : 1.3 * (1 - (t - 0.45) / 0.55); // 1.3 → 0
+        const s = t < 0.40
+            ? 1 + (t / 0.40) * 0.50         // 1 → 1.5 (ekspansionsfase)
+            : 1.50 * (1 - (t - 0.40) / 0.60); // 1.5 → 0 (kollaps)
         mesh.scale.set(s, s, s);
         if (t < 1) requestAnimationFrame(tick);
     })();
@@ -419,7 +419,8 @@ function popCapMesh(mesh) {
 function allStill() {
     return caps.every(({ body }) =>
         body.sleepState === 2 ||
-        (body.velocity.length() < 0.5 && body.angularVelocity.length() < 0.5)
+        (body.velocity.length()        < SETTLE.STILL_LINEAR &&
+         body.angularVelocity.length() < SETTLE.STILL_ANGULAR)
     );
 }
 
@@ -502,15 +503,15 @@ function animate() {
 
     if (phase === 'settling') {
         const el = now - settleStart;
-        if (el > 400) {
-            const t       = Math.min((el - 400) / 1500, 1);
-            const tAngular = Math.min((el - 400) / 600, 1); // angular dæmpes 2.5x hurtigere
+        if (el > SETTLE.RAMP_DELAY_MS) {
+            const tl = Math.min((el - SETTLE.RAMP_DELAY_MS) / SETTLE.LINEAR_RAMP_MS,  1);
+            const ta = Math.min((el - SETTLE.RAMP_DELAY_MS) / SETTLE.ANGULAR_RAMP_MS, 1);
             caps.forEach(({ body }) => {
-                body.linearDamping  = 0.04 + t        * 0.92;
-                body.angularDamping = 0.15 + tAngular * 0.81; // starter lidt højere, når 0.96 på ~600ms
+                body.linearDamping  = SETTLE.AIR_LINEAR  + tl * (SETTLE.LINEAR_MAX  - SETTLE.AIR_LINEAR);
+                body.angularDamping = SETTLE.AIR_ANGULAR + ta * (SETTLE.ANGULAR_MAX - SETTLE.AIR_ANGULAR);
             });
         }
-        if (el > 5000 || (el > 600 && allStill())) endThrow();
+        if (el > SETTLE.MAX_MS || (el > SETTLE.MIN_MS && allStill())) endThrow();
     }
 
     cam.update(dt);

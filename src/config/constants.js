@@ -8,7 +8,7 @@ export const DEFAULT_SPEED = 65;
 export const DEFAULT_MASS  = 3.5;
 
 // Power bar: speed-range når power bar er aktiv (erstatter slideren)
-export const POWER_SPEED_MIN = 20;
+export const POWER_SPEED_MIN = 45;
 export const POWER_SPEED_MAX = 100;
 
 // Pause i ms mellem klik og slammer-spawn (giver visuel feedback + mobil-venlig timing)
@@ -19,9 +19,30 @@ export const CAM_BASE  = { x: 0, y: 16, z: 22 }; // zoomed ud (post-blast) — o
 export const CAM_CLOSE = { x: 0, y: 12, z: 8  }; // zoomed ind (idle/aiming) — mere ovenfra
 
 export const SLAMMER_DEFS = [
-    { name: 'Gold Raptor', type: 'gold', texFront: 'assets/slammers/gold_raptor.png', texBack: 'assets/slammers/gold_raptor_b.png', rimColor: 0x7a5410 },
-    { name: 'Yin Yang',    type: 'holo', texFront: 'assets/slammers/ying_yang.png',   texBack: 'assets/slammers/ying_yang_b.png',   rimColor: 0x111111 },
+    { name: 'Gold Raptor',  type: 'gold',  texFront: 'assets/slammers/gold_raptor.png',   texBack: 'assets/slammers/gold_raptor_b.png',   rimColor: 0x7a5410 },
+    { name: 'Yin Yang',     type: 'holo',  texFront: 'assets/slammers/ying_yang.png',     texBack: 'assets/slammers/ying_yang_b.png',     rimColor: 0x111111 },
+    { name: 'Skull Slammer',type: 'skull', texFront: 'assets/slammers/skull_slammer.png', texBack: 'assets/slammers/skull_slammer_b.png', rimColor: 0x000000 },
 ];
+
+// ─── SETTLE / DÆMPNING ───────────────────────────────────────────────────────
+// Lineær bevægelse = "the boom" (caps der flyver udad) → dæmpes blødt.
+// Vinkel-bevægelse = rim-spin / møntrotation           → dæmpes hårdt.
+// At adskille de to bevarer det eksplosive look OG dræber den langsomme settling.
+export const SETTLE = {
+    AIR_LINEAR:      0.04, // næsten ingen → fuld scatter bevares
+    AIR_ANGULAR:     0.30, // dræber rim-spin i luften uden at fjerne tumbling
+
+    RAMP_DELAY_MS:    350,
+    LINEAR_RAMP_MS:  1200,
+    ANGULAR_RAMP_MS:  450, // spin bløder hurtigt af på gulvet
+    LINEAR_MAX:      0.94,
+    ANGULAR_MAX:     0.97,
+
+    STILL_LINEAR:    0.7,  // var 0.5
+    STILL_ANGULAR:   1.4,  // var 0.5 — en cap må rasle lidt og tælle som "i ro"
+    MIN_MS:           500,
+    MAX_MS:          2500, // var 5000 — hård bagkant
+};
 
 export const CAP_DEFS = [
     // Raptor Strike

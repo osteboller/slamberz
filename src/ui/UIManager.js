@@ -16,8 +16,10 @@ export class UIManager {
         this.onGravityChange = null;
 
         this._capViewer = new CapViewer(document.getElementById('cap-viewer-container'));
+        this._slammerViewer = new CapViewer(document.getElementById('slammer-viewer-container'));
         this._buildTunePanel();
         this._buildPileOverlay();
+        this._buildHelp();
     }
 
     // ─── GETTERS ─────────────────────────────────────────────────────────────
@@ -43,8 +45,8 @@ export class UIManager {
         const img  = document.createElement('img');
         img.src    = def.texFront ?? '';
         img.className = 'collect-icon';
-        img.style.left = (rect.left + rect.width  / 2 - 17) + 'px';
-        img.style.top  = (rect.top               - 10) + 'px';
+        img.style.left = (rect.left + rect.width  / 2 - 26) + 'px';
+        img.style.top  = (rect.top               - 15) + 'px';
         document.body.appendChild(img);
         img.addEventListener('animationend', () => img.remove());
 
@@ -66,9 +68,17 @@ export class UIManager {
         }
     }
 
-    showResults(won, totalScore, wonCaps) {
-        document.getElementById('score').textContent    = totalScore;
-        document.getElementById('wonCount').textContent = won;
+    showResults(won, totalScore, wonCaps, allFlipped = false) {
+        document.getElementById('score').textContent = totalScore;
+
+        const label = document.getElementById('wonLabel');
+        if (allFlipped && won > 0) {
+            label.textContent = `Tillykke! Du vendte alle ${won} caps!`;
+            label.style.color = '#ffd700';
+        } else {
+            label.textContent = `Du vendte ${won} caps`;
+            label.style.color = '';
+        }
 
         const wonList = document.getElementById('wonList');
         wonList.innerHTML = wonCaps.map((d, i) => {
@@ -126,7 +136,8 @@ export class UIManager {
     // ─── OVERLAY STATE ───────────────────────────────────────────────────────
     isOverlayOpen() {
         return document.getElementById('cap-overlay')?.style.display === 'block'
-            || document.getElementById('cap-detail')?.style.display  === 'block';
+            || document.getElementById('cap-detail')?.style.display  === 'block'
+            || document.getElementById('slammer-detail')?.style.display === 'block';
     }
 
     // ─── SLAMMER SELECTION ───────────────────────────────────────────────────
@@ -148,25 +159,41 @@ export class UIManager {
             border-radius:10px;font:13px/1.9 Arial,sans-serif;
             border:1px solid rgba(255,255,255,0.15);user-select:none;overflow:hidden;`;
 
-        // ── Slammer selector ────────────────────────────────────────────────
-        const slamRow = document.createElement('div');
-        slamRow.style.cssText = 'padding:8px 16px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.08)';
-        slamRow.innerHTML = `
-            <button id="slam-prev" style="background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;padding:0 4px;line-height:1">‹</button>
-            <span id="slam-name" style="font-size:12px;font-weight:bold;color:#fff;text-align:center;flex:1">${SLAMMER_DEFS[0].name}</span>
-            <button id="slam-next" style="background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;padding:0 4px;line-height:1">›</button>`;
-        panel.appendChild(slamRow);
-
-        // ── Fysik sektion ────────────────────────────────────────────────────
-        const { wrap: physWrap, body: physBody } = this._buildSection('Fysik', true);
+        // ── Fysik sektion (lukket som default) ──────────────────────────────
+        const { wrap: physWrap, body: physBody } = this._buildSection('Fysik', false);
         physBody.innerHTML = `
             ${this._sliderRow('Mass',    'sl-mss',  'tv-mss',  0.5, 20,   0.5,  this._mass)}
             ${this._sliderRow('Gravity', 'sl-grav', 'tv-grav',  50, 400,  10,   this._gravity)}
             ${this._sliderRow('Blast',   'sl-bls',  'tv-bls',  0.1, 1.5,  0.05, this._blastSpread)}`;
         panel.appendChild(physWrap);
 
-        // ── Caps sektion ─────────────────────────────────────────────────────
-        const { wrap: capsWrap, body: capsBody } = this._buildSection('Caps', true);
+        // ── Slammers sektion ────────────────────────────────────────────────
+        const { wrap: slammersWrap, body: slammersBody } = this._buildSection('Slammers', false);
+        slammersBody.innerHTML = '';
+        
+        // Slammer selector med < og >
+        const slamRow = document.createElement('div');
+        slamRow.style.cssText = 'padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px';
+        const slamPrev = document.createElement('button');
+        slamPrev.textContent = '‹';
+        slamPrev.style.cssText = 'background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;padding:0 4px;line-height:1;flex:0 0 auto';
+        slamPrev.id = 'slam-prev';
+        const slamName = document.createElement('button');
+        slamName.textContent = SLAMMER_DEFS[0].name;
+        slamName.id = 'slam-name';
+        slamName.style.cssText = 'background:none;border:none;color:#fff;font-size:12px;font-weight:bold;text-align:center;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;padding:0;font-family:inherit;line-height:inherit';
+        const slamNext = document.createElement('button');
+        slamNext.textContent = '›';
+        slamNext.style.cssText = 'background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;padding:0 4px;line-height:1;flex:0 0 auto';
+        slamNext.id = 'slam-next';
+        slamRow.appendChild(slamPrev);
+        slamRow.appendChild(slamName);
+        slamRow.appendChild(slamNext);
+        slammersBody.appendChild(slamRow);
+        panel.appendChild(slammersWrap);
+
+        // ── Caps sektion (lukket som default) ────────────────────────────────
+        const { wrap: capsWrap, body: capsBody } = this._buildSection('Caps', false);
 
         // Series-picker knapper
         const seriesPicker = document.createElement('div');
@@ -191,17 +218,12 @@ export class UIManager {
         });
         capsBody.appendChild(seriesPicker);
 
-        // Stack count slider — max afhænger af aktiv serie
+        // Stack count slider
         const stackMax = this.getActiveCaps().length;
-        capsBody.innerHTML += this._sliderRow('Antal', 'sl-cnt', 'tv-cnt', 4, stackMax, 1, Math.min(this._stackCount, stackMax));
-        capsBody.appendChild(seriesPicker); // genvedhæft picker (innerHTML overskriv er sket)
-
-        // re-render korrekt: brug insertAdjacentHTML i stedet
-        capsBody.innerHTML = '';
-        capsBody.appendChild(seriesPicker);
         const stackDiv = document.createElement('div');
         stackDiv.innerHTML = this._sliderRow('Antal', 'sl-cnt', 'tv-cnt', 4, CAP_DEFS.length, 1, this._stackCount);
         capsBody.appendChild(stackDiv.firstElementChild);
+        
         const noteEl = document.createElement('p');
         noteEl.style.cssText = 'margin-top:4px;font-size:11px;color:#555;line-height:1.3';
         noteEl.id = 'caps-note';
@@ -225,10 +247,16 @@ export class UIManager {
         document.getElementById('slam-prev').addEventListener('click', () => {
             this._slammerIdx = (this._slammerIdx - 1 + SLAMMER_DEFS.length) % SLAMMER_DEFS.length;
             document.getElementById('slam-name').textContent = SLAMMER_DEFS[this._slammerIdx].name;
+            this._showSlammerDetail(SLAMMER_DEFS[this._slammerIdx]);
         });
         document.getElementById('slam-next').addEventListener('click', () => {
             this._slammerIdx = (this._slammerIdx + 1) % SLAMMER_DEFS.length;
             document.getElementById('slam-name').textContent = SLAMMER_DEFS[this._slammerIdx].name;
+            this._showSlammerDetail(SLAMMER_DEFS[this._slammerIdx]);
+        });
+        document.getElementById('slam-name').addEventListener('click', e => {
+            e.stopPropagation();
+            this._showSlammerDetail(SLAMMER_DEFS[this._slammerIdx]);
         });
 
         document.getElementById('sl-mss').addEventListener('input', e => {
@@ -312,6 +340,7 @@ export class UIManager {
     _buildPileOverlay() {
         const overlay = document.getElementById('cap-overlay');
         const detail  = document.getElementById('cap-detail');
+        const slamDetail = document.getElementById('slammer-detail');
 
         document.getElementById('pile-won-btn').addEventListener('pointerdown', (e) => {
             e.stopPropagation();
@@ -324,11 +353,14 @@ export class UIManager {
 
         overlay.addEventListener('pointerdown', e => e.stopPropagation());
         detail.addEventListener('pointerdown',  e => e.stopPropagation());
+        slamDetail.addEventListener('pointerdown', e => e.stopPropagation());
 
         document.addEventListener('pointerdown', () => {
             overlay.style.display = 'none';
             detail.style.display  = 'none';
+            slamDetail.style.display = 'none';
             this._capViewer.hide();
+            this._slammerViewer.hide();
         });
     }
 
@@ -377,11 +409,59 @@ export class UIManager {
         overlay.style.display = 'block';
     }
 
-    _showCapDetail(def, won) {
+    // ─── HJÆLP-MODAL ─────────────────────────────────────────────────────────
+    _buildHelp() {
+        const modal  = document.getElementById('help-modal');
+        const btnOpen  = document.getElementById('help-btn');
+        const btnClose = document.getElementById('help-close');
+
+        const open  = () => modal.classList.add('open');
+        const close = () => modal.classList.remove('open');
+
+        btnOpen.addEventListener('pointerdown',  e => { e.stopPropagation(); open(); });
+        btnClose.addEventListener('pointerdown', e => { e.stopPropagation(); close(); });
+
+        // Klik på baggrunden (selve overlay-laget) lukker
+        modal.addEventListener('pointerdown', e => {
+            if (e.target === modal) close();
+        });
+
+        // Escape-tast lukker
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') close();
+        });
+    }
+
+    // ─── CAP DETAIL POPUP ────────────────────────────────────────────────────
+    _showCapDetail(def, lit) {
         const detail = document.getElementById('cap-detail');
-        document.getElementById('cap-detail-name').textContent = def.name;
-        document.getElementById('cap-detail-sub').textContent  = won ? '✓ Vundet' : 'I stakken';
+        const nameEl = document.getElementById('cap-detail-name');
+        const subEl  = document.getElementById('cap-detail-sub');
+
+        nameEl.textContent = def.name;
+        subEl.textContent  = def.series ? def.series.replace(/_/g, ' ') : '';
+
+        // Apply visual state based on whether cap is lit (won)
+        if (lit) {
+            detail.style.borderColor = 'rgba(255, 204, 0, 0.4)';
+            detail.style.backgroundColor = 'rgba(0, 0, 0, 0.97)';
+        } else {
+            detail.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            detail.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
+        }
+
+        this._capViewer.show(def, 'cap');
         detail.style.display = 'block';
-        this._capViewer.show(def);
+    }
+
+    // ─── SLAMMER DETAIL POPUP ────────────────────────────────────────────────
+    _showSlammerDetail(def) {
+        const detail = document.getElementById('slammer-detail');
+        const nameEl = document.getElementById('slammer-detail-name');
+
+        nameEl.textContent = def.name;
+
+        this._slammerViewer.show(def, 'slammer');
+        detail.style.display = 'block';
     }
 }

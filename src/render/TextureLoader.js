@@ -44,13 +44,9 @@ export async function loadTextures(onProgress) {
         });
     });
 
-    for (const def of CAP_DEFS) {
-        if (def.texFront) cache[def.texFront] = await load(def.texFront);
-        if (def.texBack)  cache[def.texBack]  = await load(def.texBack);
-    }
+    await Promise.all(urls.map(url => load(url).then(tex => { cache[url] = tex; })));
+
     for (const def of SLAMMER_DEFS) {
-        if (def.texFront) cache[def.texFront] = await load(def.texFront);
-        if (def.texBack)  cache[def.texBack]  = await load(def.texBack);
         def._knurl = createKnurlTexture(def.rimColor);
     }
 
