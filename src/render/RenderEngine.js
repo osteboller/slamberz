@@ -9,7 +9,8 @@ export class RenderEngine {
         this.camera.position.set(CAM_BASE.x, CAM_BASE.y, CAM_BASE.z);
         this.camera.lookAt(0, 1, 0);
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        const isLowEnd = (navigator.hardwareConcurrency ?? 4) < 4;
+        this.renderer = new THREE.WebGLRenderer({ antialias: !isLowEnd });
         this.renderer.setSize(innerWidth, innerHeight);
         this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
         this.renderer.shadowMap.enabled = true;
